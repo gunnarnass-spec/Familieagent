@@ -1,0 +1,68 @@
+========================================
+DEPLOY TIL RAILWAY - STEG FOR STEG
+========================================
+
+Du trenger:
+- En GitHub-konto (gratis): https://github.com
+- En Railway-konto (gratis): https://railway.app
+
+----------------------------------------
+STEG 1: Last opp filene til GitHub
+----------------------------------------
+1. Gå til https://github.com og logg inn
+2. Klikk "New repository" (grønn knapp)
+3. Gi den navnet "familieagent", sett til Private, klikk "Create repository"
+4. Klikk "uploading an existing file"
+5. Last opp ALLE disse filene (IKKE apikey.txt - den skal IKKE på GitHub!):
+   - familieagent.html
+   - server.py
+   - sw.js
+   - manifest.json
+   - icon-192.png
+   - icon-512.png
+   - railway.json
+   - Procfile
+6. Klikk "Commit changes"
+
+----------------------------------------
+STEG 2: Deploy på Railway
+----------------------------------------
+1. Gå til https://railway.app og logg inn med GitHub
+2. Klikk "New Project" → "Deploy from GitHub repo"
+3. Velg "familieagent"-repositoriet ditt
+4. Railway starter deploy automatisk (tar ~1 minutt)
+
+----------------------------------------
+STEG 3: Legg inn API-nøkkel trygt
+----------------------------------------
+1. Klikk på prosjektet i Railway
+2. Gå til "Variables" i menyen
+3. Klikk "New Variable"
+4. Navn: ANTHROPIC_API_KEY
+5. Verdi: din nøkkel (sk-ant-...)
+6. Klikk "Add" - Railway starter automatisk på nytt
+
+----------------------------------------
+STEG 4: Finn URL-en din
+----------------------------------------
+1. Gå til "Settings" → "Networking" → "Public Domain"
+2. Klikk "Generate Domain"
+3. Du får en URL som f.eks. familieagent-production.up.railway.app
+4. Del denne URL-en med Julie og resten av familien!
+
+----------------------------------------
+STEG 5: Installer som app på iPhone/iPad
+----------------------------------------
+1. Åpne URL-en i Safari (må være Safari, ikke Chrome)
+2. Trykk på Del-knappen (firkant med pil opp)
+3. Scroll ned og trykk "Legg til på Hjem-skjerm"
+4. Gi den navn "Familieagent" og trykk "Legg til"
+5. Ferdig! Appen dukker opp på hjemskjermen
+
+----------------------------------------
+KOSTNADER
+----------------------------------------
+Railway: Gratis inntil 500 timer/måned (mer enn nok)
+Anthropic API: Noen kroner/måned for normal familiebruk
+
+========================================
