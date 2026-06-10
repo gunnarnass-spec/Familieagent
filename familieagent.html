@@ -238,20 +238,28 @@ const DEFAULT_DATA = {
   notes:[]
 };
 
-const SYSTEM = `Du er en norsk familieassistent for Familie Næss Lauvås. Du hjelper med kalender, oppgaver og logistikk.
+const SYSTEM = `Du er en norsk familieassistent for Familie Næss Lauvås (Julie, Kurt, Emil, Skybert). Du hjelper med kalender, oppgaver og logistikk.
 
 Du får alltid gjeldende familiedata som JSON. Svar kort og direkte på norsk (1-3 setninger).
 
-NÅR DU LEGGER TIL ELLER ENDRER NOE: Du MÅ alltid avslutte svaret ditt med en linje som starter med DATAUPDATE: etterfulgt av komplett oppdatert JSON. Eksempel på format:
+NÅR DU LEGGER TIL ELLER ENDRER NOE MÅ du alltid avslutte svaret med DATAUPDATE: på en egen linje etterfulgt av komplett oppdatert JSON-objekt.
 
-DATAUPDATE:{"familyName":"Familie Næss Lauvås","members":["Julie","Kurt","Emil","Skybert"],"events":[...],"tasks":[{"id":1,"text":"Rydde i garasjen","owner":"Kurt","done":false,"due":"2026-06-24"}],"notes":[]}
+Eksempel - legg til fotballtrening for Julie fredag 20. juni kl 16:
+Jeg har lagt til fotballtrening for Julie fredag 20. juni kl 16.
+DATAUPDATE:{"familyName":"Familie Næss Lauvås","members":["Julie","Kurt","Emil","Skybert"],"events":[{"id":1,"person":"Julie","date":"2026-06-20","time":"16:00","title":"Fotballtrening","recurring":"none"}],"tasks":[],"notes":[]}
 
-Regler:
-- Inkluder ALLTID alle eksisterende data pluss endringene - ikke bare det nye
+Eksempel - legg til ukentlig svømming for Emil onsdager fra 11. juni kl 17:
+Jeg har lagt til ukentlig svømming for Emil onsdager kl 17.
+DATAUPDATE:{"familyName":"Familie Næss Lauvås","members":["Julie","Kurt","Emil","Skybert"],"events":[{"id":1,"person":"Emil","date":"2026-06-11","time":"17:00","title":"Svømming","recurring":"weekly"}],"tasks":[],"notes":[]}
+
+Viktige regler:
+- ALLTID inkluder alle eksisterende events og tasks i DATAUPDATE, ikke bare nye
 - Nye IDer = høyeste eksisterende ID + 1
-- tasks har feltene: id, text, owner, done, due (valgfri dato)
-- events har feltene: id, person, date (YYYY-MM-DD), time (HH:MM), title, recurring (none/weekly)
-- Ikke send DATAUPDATE hvis du bare svarer på et spørsmål uten å endre noe`;
+- date format: YYYY-MM-DD (f.eks. 2026-06-20)
+- time format: HH:MM 24-timers (f.eks. 16:00)
+- recurring: "none" for engangs, "weekly" for ukentlig samme ukedag
+- person: må være et av medlemmene (Julie, Kurt, Emil, Skybert)
+- Ikke send DATAUPDATE hvis du bare svarer på spørsmål uten å endre noe`;
 
 let fd = null;
 let chatHistory = [];
@@ -649,7 +657,7 @@ async function sendChat(){
     const res = await fetch('/api',{
       method:'POST',
       headers:{'Content-Type':'application/json'},
-      body: JSON.stringify({model:'claude-sonnet-4-5',max_tokens:1000,system:SYSTEM,messages})
+      body: JSON.stringify({model:'claude-sonnet-4-5',max_tokens:2000,system:SYSTEM,messages})
     });
     const data = await res.json();
     if(data.error) throw new Error(data.error.message||JSON.stringify(data.error));
