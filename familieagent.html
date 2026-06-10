@@ -114,6 +114,11 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; b
 .chat-send { width: 36px; height: 36px; border-radius: 8px; border: 1px solid #ddd; background: none; color: #888; cursor: pointer; font-size: 16px; flex-shrink: 0; }
 .chat-send:hover { background: #f5f5f3; }
 .chat-send:disabled { opacity: 0.35; }
+.mic-btn { width: 36px; height: 36px; border-radius: 8px; border: 1px solid #ddd; background: none; color: #888; cursor: pointer; font-size: 16px; flex-shrink: 0; transition: all 0.15s; }
+.mic-btn:hover { background: #f5f5f3; color: #534AB7; }
+.mic-btn.recording { background: #FCEBEB; border-color: #F09595; color: #A32D2D; animation: pulse 1s infinite; }
+.mic-btn:disabled { opacity: 0.35; }
+@keyframes pulse { 0%,100%{transform:scale(1)} 50%{transform:scale(1.1)} }
 
 /* Main content */
 .week-overview { background: white; border-radius: 12px; border: 1px solid #e0ddd6; margin-bottom: 16px; overflow: hidden; }
@@ -203,6 +208,7 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; b
       <div class="chat-pane" id="chat-pane"></div>
       <div class="chat-input-row">
         <textarea id="chat-input" placeholder="Spør meg noe..." onkeydown="chatKey(event)" oninput="resizeTA(this)"></textarea>
+        <button class="mic-btn" id="mic-btn" onclick="toggleMic()" title="Tal til agenten">&#127908;</button>
         <button class="chat-send" id="chat-send-btn" onclick="sendChat()" title="Send">&#8593;</button>
       </div>
     </div>
@@ -723,6 +729,85 @@ function init(){
 
 init();
 </script>
+<script>
+// --- Speech recognition ---
+let recognition = null;
+let isRecording = false;
+
+function initSpeech(){
+  const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+  if(!SR){
+    document.getElementById('mic-btn').style.display = 'none';
+    return false;
+  }
+  recognition = new SR();
+  recognition.lang = 'nb-NO';
+  recognition.continuous = false;
+  recognition.interimResults = true;
+
+  recognition.onstart = () => {
+    isRecording = true;
+    const btn = document.getElementById('mic-btn');
+    btn.classList.add('recording');
+    btn.title = 'Stopp opptak';
+    btn.innerHTML = '&#9632;'; // stop square
+    document.getElementById('chat-input').placeholder = 'Lytter...';
+  };
+
+  recognition.onresult = (e) => {
+    let interim = '';
+    let final = '';
+    for(let i = e.resultIndex; i < e.results.length; i++){
+      if(e.results[i].isFinal) final += e.results[i][0].transcript;
+      else interim += e.results[i][0].transcript;
+    }
+    document.getElementById('chat-input').value = final || interim;
+    resizeTA(document.getElementById('chat-input'));
+  };
+
+  recognition.onend = () => {
+    isRecording = false;
+    const btn = document.getElementById('mic-btn');
+    btn.classList.remove('recording');
+    btn.title = 'Tal til agenten';
+    btn.innerHTML = '&#127908;';
+    document.getElementById('chat-input').placeholder = 'Spør meg noe...';
+    // Auto-send if we got text
+    const text = document.getElementById('chat-input').value.trim();
+    if(text) sendChat();
+  };
+
+  recognition.onerror = (e) => {
+    isRecording = false;
+    const btn = document.getElementById('mic-btn');
+    btn.classList.remove('recording');
+    btn.innerHTML = '&#127908;';
+    document.getElementById('chat-input').placeholder = 'Spør meg noe...';
+    if(e.error === 'not-allowed'){
+      appendChatMsg('agent', 'Mikrofontilgang er blokkert. Gå til innstillinger og tillat mikrofon for denne siden.');
+    }
+  };
+
+  return true;
+}
+
+function toggleMic(){
+  if(!recognition && !initSpeech()){
+    appendChatMsg('agent', 'Talegjenkjenning støttes ikke i denne nettleseren. Prøv Safari på iPhone eller Chrome på PC.');
+    return;
+  }
+  if(isRecording){
+    recognition.stop();
+  } else {
+    document.getElementById('chat-input').value = '';
+    recognition.start();
+  }
+}
+
+// Init speech on load
+window.addEventListener('load', () => { initSpeech(); });
+</script>
+
 <script>
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
